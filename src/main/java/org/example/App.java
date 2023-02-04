@@ -12,9 +12,16 @@ import java.util.List;
  *
  */
 public class App {
+    private static List<Purchase> purchaseList;
+
     public static void main( String[] args ) {
+        initialize();
         PrintService printService = new PrintService();
-        List<Purchase> purchaseList = new ArrayList<>();
+        printService.printCheck(purchaseList);
+    }
+
+    private static void initialize() {
+        purchaseList = new ArrayList<>();
         purchaseList.add(new Purchase(new Product("Молоко 1л", 82.30), 3));
         purchaseList.add(new Purchase(new Product("Продукт с очень-очень длинным названием", 82.30), 4));
         purchaseList.add(new Purchase(new Product("Кофе растворимый 300г", 452.10), 6));
@@ -22,6 +29,5 @@ public class App {
         purchaseList.add(new Purchase(new Product("Йогурт со вкусом клубники", 29.50), 12));
         purchaseList.add(new Purchase(new Product("Сахарный песок 1кг", 70.20), 5));
         purchaseList.add(new Purchase(new Product("Пакет", 5.00), 1));
-        printService.printCheck(purchaseList);
     }
 }
