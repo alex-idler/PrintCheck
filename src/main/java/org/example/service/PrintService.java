@@ -17,6 +17,7 @@ public class PrintService {
     final private int totalLength;
     final private int fullLineLength;
     final private double discountSize;
+    final private double discountSizeByCard;
     final private String amountHeader;
     final private String titleHeader;
     final private String priceHeader;
@@ -30,6 +31,7 @@ public class PrintService {
             property.load(fis);
             // считываем параметры, при их отсутствии заполняем значениями по умолчанию
             discountSize = Double.parseDouble(property.getProperty("discountSize", "0"));
+            discountSizeByCard = Double.parseDouble(property.getProperty("discountSizeByCard", "0"));
             // считываем размеры каждой колонки и общую ширину чека
             amountLength = Integer.parseInt(property.getProperty("print.amountLength", "4"));
             titleLength = Integer.parseInt(property.getProperty("print.titleLength", "40"));
@@ -53,23 +55,47 @@ public class PrintService {
     }
 
     public void printCheck(List<Purchase> purchaseList, DiscountCard discountCard) {
+        StringBuilder sb = new StringBuilder();
         double totalSum = 0.0;
-        double totalDiscount = 0.0;
-        System.out.println(getHeader());
+        double byCardDiscount = 0.0;
+        sb.append(getHeader());
         for (Purchase p : purchaseList) {
-            double discount = 0;
+            double discount;
             double price = p.getAmount() * p.getProduct().getPrice();
-            // расчитываем скидку, если продукт акционный
             if (p.getProduct().isPromo() && p.getAmount() > 5) {
+                // расчитываем скидку, если товар акционный
                 discount = discountSize;
                 totalSum += price * (1 - discount);
-                totalDiscount += price * discount;
-                System.out.print(getPurchaseStringWithDiscount(p));
+                sb.append(getPurchaseStringWithDiscount(p));
             } else {
                 totalSum += price;
-                System.out.print(getPurchaseStringWithoutDiscount(p));
+                sb.append(getPurchaseStringWithoutDiscount(p));
+                // если товар не акционный, то делаем скидку по карте покупателя (скидки не суммируются)
+                if (discountCard != null) {
+                    byCardDiscount += price * discountSizeByCard;
+                }
             }
         }
+        sb.append(getLineOfSymbols('=', fullLineLength));
+        if (discountCard != null) {
+            sb.append(formatLengthString("Карта покупателя номер " + discountCard.getNumber(),
+                    fullLineLength, true));
+            sb.append("\n");
+            sb.append(formatLengthString("Промежуточный итог: " + String.format("%.2f", totalSum),
+                    fullLineLength, true));
+            sb.append("\n");
+            sb.append(formatLengthString("Скидка по карте: " + String.format("%.2f", byCardDiscount),
+                    fullLineLength, true));
+            sb.append("\n");
+            sb.append(formatLengthString("Итого: " + String.format("%.2f", totalSum - byCardDiscount),
+                    fullLineLength, true));
+            sb.append("\n");
+        } else {
+            sb.append(formatLengthString("Итого: " + String.format("%.2f", totalSum),
+                    fullLineLength, true));
+            sb.append("\n");
+        }
+        System.out.println(sb);
     }
 
     private String getHeader() {
@@ -93,7 +119,7 @@ public class PrintService {
         sb.append(formatLengthString(amountHeader, amountLength)).append(" ");
         sb.append(formatLengthString(titleHeader, titleLength)).append(" ");
         sb.append(formatLengthString(priceHeader, priceLength, true)).append(" ");
-        sb.append(formatLengthString(totalHeader, totalLength, true));
+        sb.append(formatLengthString(totalHeader, totalLength, true)).append("\n");
         return sb.toString();
     }
 
@@ -128,7 +154,7 @@ public class PrintService {
         sb.append(formatLengthString(amountAsString, amountLength)).append(" ");
         sb.append(formatLengthString(title, titleLength)).append(" ");
         sb.append(formatLengthString(priceAsString, priceLength, true)).append("\n");
-        sb.append(formatLengthString("Цена с учётом скидки: ",
+        sb.append(formatLengthString("Цена с учётом скидки:",
                         amountLength + titleLength + 1, true)).append(" ");
         sb.append(formatLengthString(priceWithAmountAsString, priceLength, true)).append(" ");
         sb.append(formatLengthString(totalAsString, totalLength, true));
@@ -146,9 +172,7 @@ public class PrintService {
             if (!alightToRight) {
                 sb.append(input);
             }
-            for (int i = 0; i < amountOfSymbols - input.length(); i++) {
-                sb.append(" ");
-            }
+            sb.append(" ".repeat(amountOfSymbols - input.length()));
             if (alightToRight) {
                 sb.append(input);
             }
@@ -160,9 +184,7 @@ public class PrintService {
 
     private String getLineOfSymbols(char c, int count) {
         StringBuilder sb = new StringBuilder(count + 1);
-        for (int i = 0; i < count; i++) {
-            sb.append(c);
-        }
+        sb.append(String.valueOf(c).repeat(Math.max(0, count)));
         sb.append("\n");
         return sb.toString();
     }
