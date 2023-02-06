@@ -7,8 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class Product {
-    private String title;
-    private double price;
-    private boolean isPromo;
+public class DiscountCard {
+    private int number;
 }
