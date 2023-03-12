@@ -21,6 +21,7 @@ public class App {
         PrintService printService = new PrintService();
         printService.printCheck(purchaseList);
         printService.printCheck(purchaseList, discountCardList.get(0));
+        // asdsad
     }
 
     private static void initialize() {
