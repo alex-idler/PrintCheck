@@ -3,7 +3,8 @@ package org.example;
 import org.example.entity.DiscountCard;
 import org.example.entity.Product;
 import org.example.entity.Purchase;
-import org.example.service.PrintService;
+import org.example.factory.CheckFactory;
+import org.example.factory.CheckFactoryImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +19,11 @@ public class App {
 
     public static void main( String[] args ) {
         initialize();
-        PrintService printService = new PrintService();
-        printService.printCheck(purchaseList);
-        printService.printCheck(purchaseList, discountCardList.get(0));
-        // asdsaASDASDADASDASd
+        CheckFactory checkFactory = new CheckFactoryImpl();
+        System.out.println("первый чек (со скидочной картой): ");
+        System.out.println(checkFactory.getCheck(purchaseList, discountCardList.get(0)));
+        System.out.println("второй чек (без скидочной карты): ");
+        System.out.println(checkFactory.getCheck(purchaseList, null));
     }
 
     private static void initialize() {
